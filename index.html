@@ -11,6 +11,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Leitura Gás">
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>window.OneSignalDeferred=window.OneSignalDeferred||[];OneSignalDeferred.push(async function(OneSignal){await OneSignal.init({appId:"13bf22e3-107c-4d24-b0da-5bfbc380acdc",serviceWorkerPath:"leitura-gas/sw.js",serviceWorkerUpdaterPath:"leitura-gas/sw.js",serviceWorkerParam:{scope:"/leitura-gas/"}});});</script>
 <style>
   :root{--bg:#1f1e1a;--fg:#f4f2ea;--muted:#bdb8aa;--accent:#e2a400;--ink:#2a2100}
   *{box-sizing:border-box}
@@ -62,7 +64,7 @@
   setTimeout(esconderAbertura, 15000);
 
   // service worker: permite instalar e abre a casca mais rápido
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistration("./").then(r=>r||navigator.serviceWorker.register("sw.js")).catch(()=>{});
 
   // convite para instalar
   const instalado = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
@@ -80,5 +82,6 @@
   if(ios&&!instalado&&!dispensado()){$("instalarTxt").textContent="Toque em Compartilhar e depois em “Adicionar à Tela de Início”.";$("btnInstalar").hidden=true;caixa.hidden=false;}
 })();
 </script>
+  <script>window.addEventListener("message",function(e){var d=e.data;if(!d||d.tipo!=="gas-sessao")return;if(!/(^https:\/\/script\.google\.com$)|(\.googleusercontent\.com$)/.test(e.origin))return;OneSignalDeferred.push(async function(OS){try{if(d.id){await OS.login(d.id);if(!OS.Notifications.permission)OS.Slidedown.promptPush();}else{await OS.logout();}}catch(err){}});});</script>
 </body>
 </html>
