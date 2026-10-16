@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Leitura Gás</title>
+<meta name="description" content="Lançamento mensal da leitura do relógio de gás do Residencial Maria Angélica.">
+<meta name="theme-color" content="#1f1e1a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Leitura Gás">
+<style>
+  :root{--bg:#1f1e1a;--fg:#f4f2ea;--muted:#bdb8aa;--accent:#e2a400;--ink:#2a2100}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#f6f5f1;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  #app{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;background:#f6f5f1}
+  #abertura{position:fixed;inset:0;z-index:5;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .35s}
+  #abertura img{width:96px;height:96px}
+  #abertura h1{margin:0;font-size:1.25rem;font-weight:700}
+  #abertura p{margin:0;color:var(--muted);font-size:.9rem;text-align:center;padding:0 24px}
+  .gira{width:22px;height:22px;border:3px solid #3a3833;border-top-color:var(--accent);border-radius:50%;animation:g 0.9s linear infinite}
+  @keyframes g{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.gira{animation:none}#abertura{transition:none}}
+  #abertura.some{opacity:0;pointer-events:none}
+  #instalar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:6;background:var(--bg);color:var(--fg);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  #instalar img{width:40px;height:40px;flex:none}
+  #instalar div{flex:1;min-width:0;font-size:.88rem;line-height:1.35}
+  #instalar strong{display:block;font-size:.95rem}
+  #instalar button{font:inherit;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+  #btnInstalar{background:var(--accent);color:var(--ink)}
+  #btnFechar{background:transparent;color:var(--muted);padding:10px 6px!important}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<iframe id="app" title="Leitura de Gás" allow="clipboard-write; fullscreen"
+  src="https://script.google.com/macros/s/AKfycbxgBOSS1P28BbAguKn8oHrk-C91yU117M8oS1F3EvRrp-3MfltVxxOZyskfi1vHfmVR/exec"></iframe>
+
+<div id="abertura" role="status">
+  <img src="icon-192.png" alt="">
+  <h1>Leitura de Gás</h1>
+  <p id="aberturaMsg">Residencial Maria Angélica</p>
+  <div class="gira" aria-hidden="true"></div>
+</div>
+
+<div id="instalar" hidden>
+  <img src="icon-192.png" alt="">
+  <div><strong>Instalar o app</strong><span id="instalarTxt">Fica na tela inicial e abre em tela cheia.</span></div>
+  <button type="button" id="btnInstalar">Instalar</button>
+  <button type="button" id="btnFechar" aria-label="Agora não">✕</button>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const ab=$("abertura");
+  function esconderAbertura(){ab.classList.add("some");setTimeout(()=>ab.hidden=true,400);}
+  $("app").addEventListener("load",()=>setTimeout(esconderAbertura,300));
+  setTimeout(()=>{ if(!ab.hidden){ $("aberturaMsg").textContent = navigator.onLine ? "Carregando… a primeira abertura pode levar alguns segundos." : "Sem internet. Conecte-se para lançar a leitura."; } }, 6000);
+  setTimeout(esconderAbertura, 15000);
+
+  // service worker: permite instalar e abre a casca mais rápido
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+  // convite para instalar
+  const instalado = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  let pedido=null; const caixa=$("instalar");
+  function dispensado(){try{return localStorage.getItem("gas-instalar")==="nao";}catch(e){return false;}}
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();pedido=e;if(!instalado&&!dispensado())caixa.hidden=false;});
+  $("btnInstalar").addEventListener("click",async()=>{
+    if(pedido){pedido.prompt();const r=await pedido.userChoice;pedido=null;caixa.hidden=true;return;}
+    caixa.hidden=true;
+  });
+  $("btnFechar").addEventListener("click",()=>{caixa.hidden=true;try{localStorage.setItem("gas-instalar","nao");}catch(e){}});
+  window.addEventListener("appinstalled",()=>{caixa.hidden=true;});
+  // iPhone: não tem botão automático; mostra a dica
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(ios&&!instalado&&!dispensado()){$("instalarTxt").textContent="Toque em Compartilhar e depois em “Adicionar à Tela de Início”.";$("btnInstalar").hidden=true;caixa.hidden=false;}
+})();
+</script>
+</body>
+</html>
